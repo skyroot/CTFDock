@@ -1,0 +1,13 @@
+syntax enable
+set gfn=Source\ Code\ Pro:h14
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2 
+set number
+set hlsearch
+set background=dark
+colorscheme monokai
+cmap w!! w !sudo tee > /dev/null %
+set expandtab
+autocmd Filetype ruby setlocal ts=2 sw=2
