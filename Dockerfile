@@ -11,7 +11,7 @@ RUN \
 RUN \
   apt-get update && \
   apt-get install sudo git openssh-client openssh-server zsh curl wget vim python-pip python-dev libffi-dev libssl-dev apt-file gdbserver ruby2.1 ruby2.1-dev \
-  build-essential libreadline-dev libssl-dev libpq5 libpq-dev libreadline5 libsqlite3-dev libpcap-dev gdb \
+  build-essential libreadline-dev libssl-dev libpq5 libpq-dev libreadline5 libsqlite3-dev libpcap-dev gdb supervisor \
   autoconf postgresql-9.4 zlib1g-dev libxml2-dev libxslt1-dev vncviewer libyaml-dev zlib1g-dev nmap -y && \
   apt-file update && \
   apt-get clean && \
@@ -21,6 +21,11 @@ RUN \
 RUN \
   ln -s /usr/bin/ruby2.1 /usr/bin/ruby && \
   ln -s /usr/bin/gem2.1 /usr/bin/gem
+
+# Setting up supervisor
+ADD ./files/sipervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN \
+  mkdir -p /var/run/sshd /var/log/supervisor
 
 # Add the Peleus user
 RUN \
@@ -51,6 +56,7 @@ USER peleus
 ADD ./files/vimrc /home/peleus/.vimrc
 ADD ./files/vim /home/peleus/.vim
 ADD ./files/id_rsa.pub /home/peleus/.ssh/authorized_keys
+ADD ./files/tmux.conf /home/peleus/.tmux.conf
 
 # Set up oh-my-zsh
 RUN \
@@ -98,6 +104,7 @@ RUN \
   git clone https://github.com/OJ/gobuster.git
 
 ENV GOPATH=/usr/local/go/path
+
 RUN \
   cd /home/peleus/Tools/gobuster && \
   mkdir /usr/local/go/path && \
@@ -108,14 +115,12 @@ RUN \
   cd .. && \
   rm go1.6.2.linux-amd64.tar.gz
 
-# Setup autostarts
 USER root
 RUN \
-  update-rc.d postgresql enable && \
-  update-rc.d ssh enable && \ 
-  service ssh start && \ 
-  service postgresql start
+  echo disposable > /etc/hostname && \
+  host disposable
 
 USER peleus
 WORKDIR /home/peleus
-ENTRYPOINT zsh
+EXPOSE 22
+CMD ["/usr/bin/supervisord"]
