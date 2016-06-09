@@ -23,7 +23,7 @@ RUN \
   ln -s /usr/bin/gem2.1 /usr/bin/gem
 
 # Setting up supervisor
-ADD ./files/sipervisord.conf /etc/supervisor/conf.d/supervisord.conf
+ADD ./files/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN \
   mkdir -p /var/run/sshd /var/log/supervisor
 
