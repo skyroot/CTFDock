@@ -110,8 +110,12 @@ RUN \
   cd .. && \
   rm go1.6.2.linux-amd64.tar.gz
 
-# Install pwntools
+# Install angr
 USER root
+RUN \
+  pip install angr 
+
+# Install pwntools
 RUN \
   pip install --upgrade cffi && \
   pip install pwntools
@@ -124,6 +128,13 @@ RUN \
 # Set permissions for supervisor
 RUN \
   chown -R peleus:peleus /home/peleus
+
+# Add 32 bit support
+RUN \
+  dpkg --add-architecture i386 && \
+  apt-get update && \
+  apt-get install libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386 -y
+
 
 EXPOSE 22
 CMD ["/usr/bin/supervisord"]
