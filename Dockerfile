@@ -135,6 +135,10 @@ RUN \
   apt-get update && \
   apt-get install libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386 -y
 
+# Reinstall capstone for angr
+RUN \
+  apt-get install libcapstone-dev -y
+
 
 EXPOSE 22
 CMD ["/usr/bin/supervisord"]
