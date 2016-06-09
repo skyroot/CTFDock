@@ -7,7 +7,14 @@ RUN \
   echo 'deb http://security.debian.org/ jessie/updates main' >> /etc/apt/sources.list && \
   echo 'deb-src http://security.debian.org/ jessie/updates main' >> /etc/apt/sources.list
 
-# Install pwntools dependancies
+# Add the Peleus user
+RUN \
+  groupadd -g 1000 peleus && \
+  useradd -m -s /usr/bin/zsh -u 1000 -g 1000 -G sudo peleus && \
+  echo peleus:peleus | chpasswd && \
+  chmod 700 /home/peleus
+
+# Install dependancies
 RUN \
   apt-get update && \
   apt-get install sudo git openssh-client openssh-server zsh curl wget vim python-pip python-dev libffi-dev libssl-dev apt-file gdbserver ruby2.1 ruby2.1-dev \
@@ -17,41 +24,7 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Setting up symlinks
-RUN \
-  ln -s /usr/bin/ruby2.1 /usr/bin/ruby && \
-  ln -s /usr/bin/gem2.1 /usr/bin/gem
-
-# Setting up supervisor
-ADD ./files/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-RUN \
-  mkdir -p /var/run/sshd /var/log/supervisor
-
-# Add the Peleus user
-RUN \
-  groupadd -g 1000 peleus && \
-  useradd -m -s /usr/bin/zsh -u 1000 -g 1000 -G sudo peleus && \
-  echo peleus:peleus | chpasswd && \
-  chmod 700 /home/peleus
-
-# Install pwntools
-RUN \
-  pip install --upgrade cffi && \
-  pip install pwntools
-
-# Setup metasploit database
-ADD ./scripts/db.sql /tmp/
-RUN \
-  mkdir /var/lib/gems && \
-  chown -R peleus:peleus /var/lib/gems && \
-  chown -R peleus:peleus /usr/local
-
-USER postgres
-RUN \
-  /etc/init.d/postgresql start && \
-  psql -f /tmp/db.sql
-
-# Continue in the Peleus user
+# Configure peleus user
 USER peleus
 ADD ./files/vimrc /home/peleus/.vimrc
 ADD ./files/vim /home/peleus/.vim
@@ -65,12 +38,34 @@ RUN \
 ADD ./files/zshrc /home/peleus/.zshrc
 ADD ./files/peleus.zsh-theme /home/peleus/.oh-my-zsh/themes/peleus.zsh-theme
 
+# Setup metasploit database
+USER root
+ADD ./scripts/db.sql /tmp/
+RUN \
+  mkdir /var/lib/gems && \
+  chown -R peleus:peleus /var/lib/gems && \
+  chown -R peleus:peleus /usr/local
+
+USER postgres
+RUN \
+  /etc/init.d/postgresql start && \
+  psql -f /tmp/db.sql
+
 # Setup metasploit
+USER peleus
 RUN \
   mkdir /home/peleus/Tools && \
   cd /home/peleus/Tools && \
   git clone https://github.com/rapid7/metasploit-framework.git
 
+# Setting up symlinks
+USER root
+RUN \
+  ln -s /usr/bin/ruby2.1 /usr/bin/ruby && \
+  ln -s /usr/bin/gem2.1 /usr/bin/gem
+
+# Installing metasploit gems
+USER peleus
 RUN \
   gem install bundler && \
   cd /home/peleus/Tools/metasploit-framework && \
@@ -115,12 +110,20 @@ RUN \
   cd .. && \
   rm go1.6.2.linux-amd64.tar.gz
 
+# Install pwntools
 USER root
 RUN \
-  echo disposable > /etc/hostname && \
-  host disposable
+  pip install --upgrade cffi && \
+  pip install pwntools
 
-USER peleus
-WORKDIR /home/peleus
+# Setting up supervisor
+ADD ./files/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN \
+  mkdir -p /var/run/sshd /var/log/supervisor
+
+# Set permissions for supervisor
+RUN \
+  chown -R peleus:peleus /home/peleus
+
 EXPOSE 22
 CMD ["/usr/bin/supervisord"]
