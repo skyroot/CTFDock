@@ -17,7 +17,7 @@ RUN \
 # Install dependancies
 RUN \
   apt-get update && \
-  apt-get install sudo git openssh-client openssh-server zsh curl wget vim python-pip python-dev libffi-dev libssl-dev apt-file gdbserver ruby2.1 ruby2.1-dev \
+  apt-get install sudo git coreutils net-tools isc-dhcp-client openssh-client openssh-server zsh curl wget vim python-pip python-dev libffi-dev libssl-dev apt-file gdbserver ruby2.1 ruby2.1-dev \
   build-essential libreadline-dev libssl-dev libpq5 libpq-dev libreadline5 libsqlite3-dev libpcap-dev gdb supervisor \
   autoconf postgresql-9.4 zlib1g-dev libxml2-dev libxslt1-dev vncviewer libyaml-dev zlib1g-dev nmap -y && \
   apt-file update && \
