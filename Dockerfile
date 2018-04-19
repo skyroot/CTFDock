@@ -125,6 +125,12 @@ RUN \
 RUN \
   apt-get install libcapstone-dev -y
 
+# Install Radare2
+RUN \
+  cd /home/peleus/Tools && \
+  git clone https://github.com/radare/radare2.git && \
+  ./radare2/sys/install.sh
+
 
 EXPOSE 22
 CMD ["/usr/bin/supervisord"]

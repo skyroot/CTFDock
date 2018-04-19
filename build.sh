@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sudo docker build -t peleus .
+sudo docker build -t ctfdock:1.0 .
