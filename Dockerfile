@@ -1,11 +1,4 @@
-FROM debian
-
-# Change apt sources list
-RUN \
-  echo 'deb http://debian.uberglobalmirror.com/debian/ stable main contrib' > /etc/apt/sources.list && \
-  echo 'deb-src http://debian.uberglobalmirror.com/debian/ stable main contrib' >> /etc/apt/sources.list && \
-  echo 'deb http://security.debian.org/ jessie/updates main' >> /etc/apt/sources.list && \
-  echo 'deb-src http://security.debian.org/ jessie/updates main' >> /etc/apt/sources.list
+FROM debian:latest
 
 # Add the Peleus user
 RUN \
@@ -17,9 +10,9 @@ RUN \
 # Install dependancies
 RUN \
   apt-get update && \
-  apt-get install sudo git coreutils net-tools isc-dhcp-client openssh-client openssh-server zsh curl wget vim python-pip python-dev libffi-dev libssl-dev apt-file gdbserver ruby2.1 ruby2.1-dev \
+  apt-get install sudo git coreutils net-tools isc-dhcp-client openssh-client openssh-server zsh curl wget vim python-pip python-dev libffi-dev libssl-dev apt-file gdbserver ruby2.3 ruby2.3-dev \
   build-essential libreadline-dev libssl-dev libpq5 libpq-dev libreadline5 libsqlite3-dev libpcap-dev gdb supervisor \
-  autoconf postgresql-9.4 zlib1g-dev libxml2-dev libxslt1-dev vncviewer libyaml-dev zlib1g-dev nmap -y && \
+  autoconf postgresql zlib1g-dev libxml2-dev libxslt1-dev xtightvncviewer libyaml-dev zlib1g-dev nmap -y && \
   apt-file update && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -42,7 +35,6 @@ ADD ./files/peleus.zsh-theme /home/peleus/.oh-my-zsh/themes/peleus.zsh-theme
 USER root
 ADD ./scripts/db.sql /tmp/
 RUN \
-  mkdir /var/lib/gems && \
   chown -R peleus:peleus /var/lib/gems && \
   chown -R peleus:peleus /usr/local
 
@@ -57,12 +49,6 @@ RUN \
   mkdir /home/peleus/Tools && \
   cd /home/peleus/Tools && \
   git clone https://github.com/rapid7/metasploit-framework.git
-
-# Setting up symlinks
-USER root
-RUN \
-  ln -s /usr/bin/ruby2.1 /usr/bin/ruby && \
-  ln -s /usr/bin/gem2.1 /usr/bin/gem
 
 # Installing metasploit gems
 USER peleus
@@ -94,21 +80,21 @@ RUN \
 # Setup gobuster
 RUN \
   cd /home/peleus/Tools/ && \
-  wget https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz && \
-  tar -C /usr/local -xzf go1.6.2.linux-amd64.tar.gz && \
+  wget https://dl.google.com/go/go1.10.1.linux-amd64.tar.gz && \
+  tar -C /usr/local -xzf go1.10.1.linux-amd64.tar.gz && \
   git clone https://github.com/OJ/gobuster.git
 
 ENV GOPATH=/usr/local/go/path
+ENV GOBIN=$GOPATH/bin
 
 RUN \
   cd /home/peleus/Tools/gobuster && \
   mkdir /usr/local/go/path && \
-  /usr/local/go/bin/go get golang.org/x/crypto/ssh && \
-  /usr/local/go/bin/go build main.go && \
-  mv ./main ./gobuster && \
-  wget https://raw.githubusercontent.com/0x42424242/subbrute/master/names.txt && \
+  /usr/local/go/bin/go get  && \
+  /usr/local/go/bin/go build && \
+  wget https://raw.githubusercontent.com/TheRook/subbrute/master/names.txt && \
   cd .. && \
-  rm go1.6.2.linux-amd64.tar.gz
+  rm go1.10.1.linux-amd64.tar.gz
 
 # Install angr
 USER root
